@@ -35,7 +35,6 @@ public class Client implements Runnable {
 
                     System.out.println(received.data.getName());
                 }
-
             }
         }
     }
