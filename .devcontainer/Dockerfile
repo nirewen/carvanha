@@ -1,25 +1,46 @@
-# See here for image contents: https://github.com/microsoft/vscode-dev-containers/tree/v0.233.0/containers/java/.devcontainer/base.Dockerfile
+# This Dockerfile uses separate build arguments instead of VARIANT
+ARG TARGET_JAVA_VERSION=17
+ARG BASE_IMAGE_VERSION_CODENAME=bullseye
+FROM mcr.microsoft.com/devcontainers/base:${BASE_IMAGE_VERSION_CODENAME}
 
-# [Choice] Java version (use -bullseye variants on local arm64/Apple Silicon): 11, 17, 11-bullseye, 17-bullseye, 11-buster, 17-buster
-ARG VARIANT="17-bullseye"
-FROM mcr.microsoft.com/vscode/devcontainers/java:0-${VARIANT}
+USER root
+ARG TARGET_JAVA_VERSION
+ENV JAVA_HOME /usr/lib/jvm/msopenjdk-current
+ENV PATH "${JAVA_HOME}/bin:${PATH}"
+# Default to UTF-8 file.encoding
+ENV LANG en_US.UTF-8
 
-# [Option] Install Maven
-ARG INSTALL_MAVEN="false"
-ARG MAVEN_VERSION=""
-# [Option] Install Gradle
-ARG INSTALL_GRADLE="false"
-ARG GRADLE_VERSION=""
-RUN if [ "${INSTALL_MAVEN}" = "true" ]; then su vscode -c "umask 0002 && . /usr/local/sdkman/bin/sdkman-init.sh && sdk install maven \"${MAVEN_VERSION}\""; fi \
-    && if [ "${INSTALL_GRADLE}" = "true" ]; then su vscode -c "umask 0002 && . /usr/local/sdkman/bin/sdkman-init.sh && sdk install gradle \"${GRADLE_VERSION}\""; fi
-
-# [Choice] Node.js version: none, lts/*, 16, 14, 12, 10
-ARG NODE_VERSION="none"
-RUN if [ "${NODE_VERSION}" != "none" ]; then su vscode -c "umask 0002 && . /usr/local/share/nvm/nvm.sh && nvm install ${NODE_VERSION} 2>&1"; fi
+# Install Microsoft OpenJDK
+RUN arch="$(dpkg --print-architecture)" \
+	&& case "$arch" in \
+		"amd64") \
+			jdkUrl="https://aka.ms/download-jdk/microsoft-jdk-${TARGET_JAVA_VERSION}-linux-x64.tar.gz"; \
+			;; \
+		"arm64") \
+			jdkUrl="https://aka.ms/download-jdk/microsoft-jdk-${TARGET_JAVA_VERSION}-linux-aarch64.tar.gz"; \
+			;; \
+		*) echo >&2 "error: unsupported architecture: '$arch'"; exit 1 ;; \
+	esac \
+	\
+	&& wget --progress=dot:giga -O msopenjdk.tar.gz "${jdkUrl}" \
+	&& wget --progress=dot:giga -O sha256sum.txt "${jdkUrl}.sha256sum.txt" \
+	\
+	&& sha256sumText=$(cat sha256sum.txt) \
+	&& sha256=$(expr substr "${sha256sumText}" 1 64) \
+	&& echo "${sha256} msopenjdk.tar.gz" | sha256sum --strict --check - \
+	&& rm sha256sum.txt* \
+	\
+	&& mkdir -p "$JAVA_HOME" \
+	&& tar --extract \
+		--file msopenjdk.tar.gz \
+		--directory "$JAVA_HOME" \
+		--strip-components 1 \
+		--no-same-owner \
+	&& rm msopenjdk.tar.gz* \
+	\
+	&& ln -s ${JAVA_HOME} /docker-java-home \
+	&& ln -s ${JAVA_HOME} /usr/local/openjdk-${TARGET_JAVA_VERSION}
 
 # [Optional] Uncomment this section to install additional OS packages.
 # RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 #     && apt-get -y install --no-install-recommends <your-package-list-here>
-
-# [Optional] Uncomment this line to install global node packages.
-# RUN su vscode -c "source /usr/local/share/nvm/nvm.sh && npm install -g <your-package-here>" 2>&1
