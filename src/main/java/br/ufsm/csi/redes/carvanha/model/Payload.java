@@ -14,12 +14,14 @@ import lombok.SneakyThrows;
 @AllArgsConstructor
 public class Payload {
     public enum Type {
-        PING, PONG
+        PING,
+        PONG,
+        MESSAGE
     }
 
     public Type type;
     public Long time;
-    public String name;
+    public String content;
 
     @SneakyThrows
     public String toJSON() {
