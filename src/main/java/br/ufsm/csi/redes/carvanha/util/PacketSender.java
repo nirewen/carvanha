@@ -6,6 +6,7 @@ import java.net.InetAddress;
 
 import br.ufsm.csi.redes.carvanha.model.Payload;
 import br.ufsm.csi.redes.carvanha.model.Response;
+import br.ufsm.csi.redes.carvanha.server.Server;
 import lombok.SneakyThrows;
 
 public class PacketSender {
@@ -28,7 +29,7 @@ public class PacketSender {
     }
 
     public void send(Payload payload, InetAddress address) {
-        this.send(payload, address, 5555);
+        this.send(payload, address, Server.PORT);
     }
 
     @SneakyThrows
