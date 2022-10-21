@@ -20,7 +20,7 @@ public class Server implements Runnable {
                 Response response = sender.receive();
                 response.data.setType(Type.PONG);
 
-                sender.send(response.data, response.address, response.port);
+                System.out.println(response.data.content);
             }
         }
     }
