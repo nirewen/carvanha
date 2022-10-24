@@ -12,6 +12,11 @@ import lombok.SneakyThrows;
 public class PacketSender {
     private DatagramSocket socket;
 
+    @SneakyThrows
+    public PacketSender() {
+        this.socket = new DatagramSocket();
+    }
+
     public PacketSender(DatagramSocket socket) {
         this.socket = socket;
     }

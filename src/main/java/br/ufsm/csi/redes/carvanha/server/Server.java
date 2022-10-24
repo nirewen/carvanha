@@ -8,7 +8,7 @@ import br.ufsm.csi.redes.carvanha.util.PacketSender;
 import lombok.SneakyThrows;
 
 public class Server implements Runnable {
-    public static final int PORT = 5555;
+    public static final int PORT = 4000;
 
     @Override
     @SneakyThrows
@@ -18,9 +18,18 @@ public class Server implements Runnable {
                 PacketSender sender = new PacketSender(socket);
 
                 Response response = sender.receive();
-                response.data.setType(Type.PONG);
 
-                System.out.println(response.data.content);
+                if (response.getData().getType() == Type.PING) {
+                    response.getData().setType(Type.PONG);
+
+                    sender.send(response.getData(), response.getAddress(), response.getPort());
+
+                    continue;
+                }
+
+                System.out.println(String.format("%s: %s",
+                        response.getData().getName(),
+                        response.getData().getContent()));
             }
         }
     }

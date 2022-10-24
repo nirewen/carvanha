@@ -19,8 +19,11 @@ public class Payload {
         MESSAGE
     }
 
-    public Type type;
-    public Long time;
+    @Builder.Default
+    public Type type = Type.MESSAGE;
+    @Builder.Default
+    public Long time = System.nanoTime();
+    public String name;
     public String content;
 
     @SneakyThrows
